@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pong - Minecraft Style</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        
+        #pong-wrapper {
+            text-align: center;
+        }
+        
+        #pong-title {
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 32px;
+            margin-top: 20px;
+        }
+        
+        #pong-table {
+            position: relative;
+            margin: 0 auto;
+            width: 800px;
+            height: 400px;
+            border: 2px solid #fff;
+            background-color: #222;
+            margin-top: 20px;
+        }
+        
+        .platform {
+            position: absolute;
+            width: 10px;
+            height: 80px;
+            background-color: #000;
+        }
+        
+        #platform-left {
+            left: 10px;
+            background-color: #56c5eb;
+        }
+        
+        #platform-right {
+            right: 10px;
+            background-color: #eb5d56;
+        }
+        
+        #ball {
+            position: absolute;
+            top: 190px;
+            left: 390px;
+            width: 20px;
+            height: 20px;
+            background-color: #fff;
+            border-radius: 50%;
+        }
+        
+        #score {
+            color: #fff;
+            text-align: center;
+            font-size: 24px;
+            margin-top: 20px;
+            font-family: 'Press Start 2P', cursive;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="pong-wrapper">
+        <h1 id="pong-title">PONG</h1>
+        <div id="pong-table">
+            <div class="platform" id="platform-left"></div>
+            <div class="platform" id="platform-right"></div>
+            <div id="ball"></div>
+        </div>
+        <p id="score">Score: 0</p>
+    </div>
+    
+    <script>
+        // Variables de configuration du jeu
+        var tableWidth = 800;
+        var tableHeight = 400;
+        var platformHeight = 80;
+        var platformSpeed = 5;
+        var ballSpeed = 2;
+        var initialBallSpeed = ballSpeed;
+        var accelerationRate = 0.005;
+        var score = 0;
+        var gameStarted = false;
+        
+        // Variables de position des plateformes
+        var platformLeftY = tableHeight / 2 - platformHeight / 2;
+        var platformRightY = tableHeight / 2 - platformHeight / 2;
+        
+        // Variables de déplacement des plateformes
+        var platformLeftDirection = 0;
+        var platformRightDirection = 0;
+        
+        // Variables de gestion des touches pressées
+        var upArrowPressed = false;
+        var downArrowPressed = false;
+        
+        // Variables de position de la balle
+        var ballX = tableWidth / 2;
+        var ballY = tableHeight / 2;
+        var ballXSpeed = ballSpeed;
+        var ballYSpeed = ballSpeed;
+        
+        // Récupérer les éléments HTML
+        var platformLeft = document.getElementById('platform-left');
+        var platformRight = document.getElementById('platform-right');
+        var ball = document.getElementById('ball');
+        var scoreElement = document.getElementById('score');
+        
+        // Fonction pour augmenter le score
+        function increaseScore() {
+            score++;
+            scoreElement.textContent = 'Score: ' + score;
+        }
+        
+        // Fonction pour réinitialiser le jeu
+        function resetGame() {
+            ballX = tableWidth / 2;
+            ballY = tableHeight / 2;
+            ballXSpeed = ballSpeed;
+            ballYSpeed = ballSpeed;
+            score = 0;
+            scoreElement.textContent = 'Score: ' + score;
+        }
+        
+        // Fonction de mise à jour de la position des éléments
+        function update() {
+            // Vérifier si le jeu a commencé
+            if (!gameStarted) {
+                return;
+            }
+            
+            // Mise à jour des plateformes
+            if (upArrowPressed && platformRightY > 0) {
+                platformRightY -= platformSpeed;
+                platformLeftY -= platformSpeed;
+            }
+            if (downArrowPressed && platformRightY < tableHeight - platformHeight) {
+                platformRightY += platformSpeed;
+                platformLeftY += platformSpeed;
+            }
+            
+            platformLeft.style.top = platformLeftY + 'px';
+            platformRight.style.top = platformRightY + 'px';
+            
+            // Mise à jour de la balle
+            ballX += ballXSpeed;
+            ballY += ballYSpeed;
+            
+            // Vérification des collisions avec les plateformes
+            if (ballY > platformLeftY && ballY < platformLeftY + platformHeight && ballX < 30 && ballXSpeed < 0) {
+                ballXSpeed = ballSpeed;
+                increaseScore();
+            }
+            if (ballY > platformRightY && ballY < platformRightY + platformHeight && ballX > tableWidth - 50 && ballXSpeed > 0) {
+                ballXSpeed = -ballSpeed;
+                increaseScore();
+            }
+            
+            // Vérification des collisions avec les bords
+            if (ballY < 0 || ballY > tableHeight - 20) {
+                ballYSpeed = -ballYSpeed;
+            }
+            
+            // Vérification de la sortie de la balle derrière les plateformes
+            if (ballX < -20 || ballX > tableWidth) {
+                ballSpeed = initialBallSpeed;
+                resetGame();
+            }
+            
+            ball.style.left = ballX + 'px';
+            ball.style.top = ballY + 'px';
+            
+            // Accélération du jeu
+            ballSpeed += accelerationRate;
+            
+            // Boucle de jeu
+            requestAnimationFrame(update);
+        }
+        
+        // Gestion des touches pressées et relâchées
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'ArrowUp') {
+                upArrowPressed = true;
+            }
+            if (event.code === 'ArrowDown') {
+                downArrowPressed = true;
+            }
+            if (event.code === 'Space') {
+                if (!gameStarted) {
+                    gameStarted = true;
+                    resetGame();
+                    update();
+                }
+            }
+        });
+        
+        document.addEventListener('keyup', function(event) {
+            if (event.code === 'ArrowUp') {
+                upArrowPressed = false;
+            }
+            if (event.code === 'ArrowDown') {
+                downArrowPressed = false;
+            }
+        });
+    </script>
+</body>
+</html>
